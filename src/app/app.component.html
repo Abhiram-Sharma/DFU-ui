@@ -1,0 +1,138 @@
+<div class="container">
+  
+  <header class="app-header">
+    <div class="header-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Diabetic Foot Check</h1>
+      <p>AI-assisted foot image screening</p>
+    </div>
+  </header>
+
+  <!-- LANDING STATE -->
+  <main class="content-wrapper" *ngIf="state === 'landing'">
+    <div class="card main-card">
+      <h2 class="title">Check a Foot Image</h2>
+      <p class="subtitle">Upload or capture a clear image of the foot to receive an AI-assisted screening result.</p>
+      
+      <div *ngIf="!isCameraActive" class="action-buttons">
+        <button class="btn btn-primary" (click)="triggerUpload()">
+          <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+          Upload Photo
+        </button>
+        <button class="btn btn-secondary" (click)="startCamera()">
+          <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          Capture Photo
+        </button>
+      </div>
+
+      <div *ngIf="isCameraActive" class="camera-container">
+        <video #cameraVideo autoplay playsinline class="camera-view"></video>
+        <div class="camera-actions">
+          <button class="btn btn-primary" (click)="capturePhoto()">Take Photo</button>
+          <button class="btn btn-secondary" (click)="cancelCamera()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- PREVIEW STATE -->
+  <main class="content-wrapper" *ngIf="state === 'preview'">
+    <div class="card preview-card">
+      <h2 class="title">Confirm Image</h2>
+      <p class="subtitle">Please ensure the image is clear and well-lit.</p>
+      
+      <div class="image-preview-container">
+        <img *ngIf="previewUrl" [src]="previewUrl" alt="Foot image preview" class="preview-img" />
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-primary" (click)="analyzePhoto()">Analyze Photo</button>
+        <button class="btn btn-secondary" (click)="reset()">Change Photo</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- LOADING STATE -->
+  <main class="content-wrapper" *ngIf="state === 'loading'">
+    <div class="card loading-card">
+      <div class="spinner"></div>
+      <h2 class="title">Analyzing image...</h2>
+      <p class="subtitle">Please wait while the image is being assessed.</p>
+    </div>
+  </main>
+
+  <!-- RESULT STATE -->
+  <main class="content-wrapper" *ngIf="state === 'result'">
+    <div class="card result-card" [ngClass]="isUlcer ? 'result-warning' : 'result-success'">
+      <div class="result-icon-large">
+        <svg *ngIf="isUlcer" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="warning-icon"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <svg *ngIf="!isUlcer" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="success-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h2 class="title result-title">{{ resultTitle }}</h2>
+      <p class="result-explanation">{{ resultExplanation }}</p>
+      
+      <div class="stats-container">
+        <div class="stat-row main-confidence">
+          <span class="stat-label">Model Confidence</span>
+          <span class="stat-value">{{ formattedConfidence }}</span>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="probability-bars">
+          <div class="prob-row">
+            <div class="prob-label">
+              <span>Possible Ulcer</span>
+              <span>{{ ulcerProbability | number:'1.2-2' }}%</span>
+            </div>
+            <div class="prob-bar-bg">
+              <div class="prob-bar-fill warning-fill" [style.width.%]="ulcerProbability"></div>
+            </div>
+          </div>
+          <div class="prob-row">
+            <div class="prob-label">
+              <span>Healthy Skin</span>
+              <span>{{ healthyProbability | number:'1.2-2' }}%</span>
+            </div>
+            <div class="prob-bar-bg">
+              <div class="prob-bar-fill success-fill" [style.width.%]="healthyProbability"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="stat-row">
+          <span class="stat-label" style="font-size: 14px; color: var(--text-muted);">Uploaded File</span>
+          <span class="stat-value" style="font-size: 14px; color: var(--text-main); font-weight: 500;">{{ uploadedFilename }}</span>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary mt-4" (click)="reset()">Analyze Another Photo</button>
+    </div>
+    
+    <div class="disclaimer-card">
+      <p class="disclaimer-text">
+        <strong>Disclaimer:</strong> This result is an AI-assisted screening assessment and is not a medical diagnosis. If you have concerns about a foot wound, ulcer, or changes in your foot, consult a qualified healthcare professional.
+      </p>
+    </div>
+  </main>
+
+  <!-- ERROR STATE -->
+  <main class="content-wrapper" *ngIf="state === 'error'">
+    <div class="card error-card">
+      <div class="error-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h2 class="title">Something went wrong</h2>
+      <p class="subtitle">{{ errorMessage }}</p>
+      <button class="btn btn-primary" (click)="reset()">Try Again</button>
+    </div>
+  </main>
+
+  <!-- Hidden file input -->
+  <input type="file" #fileInput class="hidden" accept="image/jpeg, image/png, image/jpg" (change)="onFileSelected($event)" />
+</div>
