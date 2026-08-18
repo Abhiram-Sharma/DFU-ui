@@ -99,9 +99,6 @@
       <div class="spinner" role="status" aria-label="Analyzing image"></div>
       <h2 class="title">Analyzing image…</h2>
       <p class="subtitle">Please wait while the AI model processes your photo.</p>
-      <div class="loading-dots" aria-hidden="true">
-        <span></span><span></span><span></span>
-      </div>
     </div>
   </main>
 
@@ -128,7 +125,7 @@
       <h2 class="title result-title">{{ resultTitle }}</h2>
       <p class="result-explanation">{{ resultExplanation }}</p>
 
-      <div class="stats-container">
+      <div class="stats-container tinted-box">
         <div class="stat-row main-confidence">
           <span class="stat-label">Model Confidence</span>
           <span class="stat-value">{{ formattedConfidence }}</span>
@@ -160,15 +157,15 @@
         <div class="divider"></div>
 
         <div class="file-row">
-          <span class="file-label">Uploaded file</span>
-          <span class="file-name" [title]="uploadedFilename">{{ uploadedFilename }}</span>
+          <span class="file-label muted">Uploaded file</span>
+          <span class="file-name muted" [title]="uploadedFilename">{{ uploadedFilename }}</span>
         </div>
       </div>
 
       <button class="btn btn-primary" (click)="reset()" type="button">Analyze Another Photo</button>
     </div>
 
-    <div class="disclaimer-card">
+    <div class="disclaimer-card tinted-box">
       <p class="disclaimer-text">
         <strong>Disclaimer:</strong> This is an AI-assisted screening result, not a medical diagnosis.
         If you have concerns about a wound or foot condition, consult a qualified healthcare professional.
