@@ -29,6 +29,15 @@
         </button>
       </div>
 
+      <div *ngIf="!isCameraActive" class="test-images-section mt-4">
+        <h3 class="test-images-title" style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px; text-align: center;">Or try a test image:</h3>
+        <div class="test-images-grid" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <div *ngFor="let img of testImages" class="test-image-wrapper" (click)="selectTestImage(img)" style="cursor: pointer; border-radius: 8px; overflow: hidden; border: 2px solid transparent; transition: border-color 0.2s;">
+            <img [src]="img" alt="Test image" class="test-image-thumb" style="width: 80px; height: 80px; object-fit: cover; display: block;" onmouseover="this.parentElement.style.borderColor='var(--primary)'" onmouseout="this.parentElement.style.borderColor='transparent'" />
+          </div>
+        </div>
+      </div>
+
       <div *ngIf="isCameraActive" class="camera-container">
         <video #cameraVideo autoplay playsinline class="camera-view"></video>
         <div class="camera-actions">
@@ -46,7 +55,7 @@
       <p class="subtitle">Please ensure the image is clear and well-lit.</p>
       
       <div class="image-preview-container">
-        <img *ngIf="previewUrl" [src]="previewUrl" alt="Foot image preview" class="preview-img" />
+        <img *ngIf="previewUrl" [src]="previewUrl" alt="Foot image preview" class="preview-img" (click)="analyzePhoto()" style="cursor: pointer;" title="Click to analyze" />
       </div>
 
       <div class="action-buttons">

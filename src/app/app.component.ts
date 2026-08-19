@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { PredictionService } from './services/prediction.service';
 import { ImageProcessingService } from './services/image-processing.service';
 import { PredictionResponse } from './models/prediction.model';
+import { NgZone } from '@angular/core';
 
 type AppState = 'landing' | 'preview' | 'loading' | 'result' | 'error';
 
@@ -16,9 +17,17 @@ type AppState = 'landing' | 'preview' | 'loading' | 'result' | 'error';
 export class AppComponent {
   private predictionService = inject(PredictionService);
   private imageService = inject(ImageProcessingService);
+  private ngZone = inject(NgZone);
 
   state: AppState = 'landing';
   
+  testImages = [
+    '/assets/test images/Abnormal 1.jpg',
+    '/assets/test images/Abnormal 2.jpg',
+    '/assets/test images/Normal 1.jpg',
+    '/assets/test images/Normal 2.jpg'
+  ];
+
   // Image data
   selectedFile: File | Blob | null = null;
   previewUrl: string | null = null;
@@ -47,6 +56,17 @@ export class AppComponent {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       await this.processAndPreviewImage(file);
+    }
+  }
+
+  // 2.5 Select Test Image
+  async selectTestImage(imagePath: string) {
+    try {
+      const response = await fetch(imagePath);
+      const blob = await response.blob();
+      await this.processAndPreviewImage(blob);
+    } catch (err) {
+      this.showError('Could not load test image.');
     }
   }
 
@@ -79,11 +99,13 @@ export class AppComponent {
     
     if (ctx) {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          this.stopCamera();
-          await this.processAndPreviewImage(blob);
-        }
+      canvas.toBlob((blob) => {
+        this.ngZone.run(async () => {
+          if (blob) {
+            this.stopCamera();
+            await this.processAndPreviewImage(blob);
+          }
+        });
       }, 'image/jpeg', 0.95);
     }
   }
